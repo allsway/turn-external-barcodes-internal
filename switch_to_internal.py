@@ -14,13 +14,7 @@ def get_key():
 # Returns the Alma API base URL
 def get_base_url():
 	return config.get('Params', 'baseurl')
-
-# Returns the location mapping file, taken from the Alma Migration Form
-def get_id_type():
-	return config.get('Params', 'idtype')
 	
-def get_total_users():
-	return config.get('Params', 'total')
 
 # gets the high-level user records in batches of 100, so that we can retrieve every user record by ID
 def get_user_chunk(offset, limit):
@@ -29,31 +23,46 @@ def get_user_chunk(offset, limit):
 	if response.status_code == 200:
 		return ET.fromstring(response.content)
 	else:
-		print ('fail' + chunk_url)
+		print ('fail: ' + chunk_url)
 	
 
 # Calls the individual user API
-def get_user_barcode(id):
+def get_user_record(id, idtype):
 	# do some checks on ID
 	user_url = get_base_url() + '/almaws/v1/users/' + id + '?apikey=' + get_key();
 	response = requests.get(user_url)
 	if response.status_code == 200:
 		xml = ET.fromstring(response.content)
-		parse_user(xml)
+		parse_user(xml,id,idtype)
+	else:
+		print ('failed to get user: ' + user_url)
+	
+# Goes to user ID field and changes segment_type to Internal	
+def parse_user(xml,userid,idtype):
+	switch = False
+	for id in xml.findall('user_identifiers/user_identifier'):
+		if id.find('id_type').text == idtype:
+			switch = True
+			print (id.find('id_type').text)
+			id.attrib['segment_type'] = 'Internal'
+	if switch: # if no ID field to switch, continue
+		put_user(xml,userid)
+			
+# Makes a put request to user API with updated ID fields to internal fields
+def put_user(xml,id):
+	headers = {"Content-Type": "application/xml"}
+	print (id)
+	user_url = get_base_url() + '/almaws/v1/users/' + id + '?apikey=' + get_key();
+	r = requests.put(user_url,data=ET.tostring(xml),headers=headers)
+	print (r.content)
 		
 	
-# Goes to user ID field and calls function to change segment_type to Internal	
-def parse_user(xml):
-	id_code = get_id_type()
-	for ids in xml.findall('user_identifiers/user_identifier'):
-		if ids.find('id_type').text == id_code:
-			print (ids.find('id_type').text)
-	
+# parsing configuration file for API information, number of users and the ID type that we are switching to an internal ID type. 	
 config = configparser.ConfigParser()
 config.read(sys.argv[1]) #reads in parameter file
 apikey = config.get('Params', 'apikey')
 baseurl = config.get('Params','baseurl')
-id =  config.get('Params', 'idtype')	
+idtype =  config.get('Params', 'idtype')	
 total_users = config.get('Params', 'total')
 
 
@@ -63,7 +72,7 @@ for i in range(0, int(total_users), limit):
 	if response:
 		for primary_id in response.findall('user/primary_id'):
 			print (primary_id.text)
-			barcode = get_user_barcode(primary_id.text)
+			get_user_record(primary_id.text, idtype)
 
 		
 	
