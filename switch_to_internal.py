@@ -1,10 +1,8 @@
 #!/usr/bin/python
 import requests
 import sys
-import csv
 import configparser
 import logging
-import re
 import xml.etree.ElementTree as ET
 
 # Returns the API key
@@ -67,7 +65,8 @@ total_users = config.get('Params', 'total')
 
 
 limit = 5
-for i in range(0, int(total_users), limit):
+offset = 0
+for i in range(offset, int(total_users), limit):
 	response = get_user_chunk(i, limit)
 	if response:
 		for primary_id in response.findall('user/primary_id'):
