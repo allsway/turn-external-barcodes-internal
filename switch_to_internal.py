@@ -3,6 +3,7 @@ import requests
 import sys
 import configparser
 import logging
+import csv
 import xml.etree.ElementTree as ET
 
 # Returns the API key
@@ -55,6 +56,7 @@ def put_user(xml,id):
 	print (r.content)
 		
 	
+
 # parsing configuration file for API information, number of users and the ID type that we are switching to an internal ID type. 	
 config = configparser.ConfigParser()
 config.read(sys.argv[1]) #reads in parameter file
@@ -65,27 +67,17 @@ total_users = config.get('Params', 'total')
 
 
 limit = 5
-offset = int(sys.argv[2])
-total_users = int(total_users) + int(offset)
+users_file = sys.argv[2]
 print (total_users)
-for i in range(offset, int(total_users), limit):
-	response = get_user_chunk(i, limit)
-	if response:
-		for primary_id in response.findall('user/primary_id'):
-			print (primary_id.text)
-			get_user_record(primary_id.text, idtype)
 
-	print ('i: ' + str(i))
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+f  = open(users_file,'rt')
+try:
+	reader = csv.reader(f)
+	header = next(reader)
+	for row in reader:
+		get_user_record(row[0], idtype)
+finally:
+	f.close()	
 	
 	
 	
