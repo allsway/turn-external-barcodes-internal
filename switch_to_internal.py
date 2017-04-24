@@ -14,7 +14,7 @@ def get_base_url():
 	return config.get('Params', 'baseurl')
 	
 
-# gets the high-level user records in batches of 100, so that we can retrieve every user record by ID
+# gets the high-level user records in batches of {limit}, so that we can retrieve every user record by ID
 def get_user_chunk(offset, limit):
 	chunk_url = get_base_url() + '/almaws/v1/users?apikey=' + get_key() + '&offset=' + str(offset) + '&limit=' + str(limit);
 	response = requests.get(chunk_url)
@@ -35,7 +35,7 @@ def get_user_record(id, idtype):
 	else:
 		print ('failed to get user: ' + user_url)
 	
-# Goes to user ID field and changes segment_type to Internal	
+# Iterates to user ID field and changes segment_type to Internal	
 def parse_user(xml,userid,idtype):
 	switch = False
 	for id in xml.findall('user_identifiers/user_identifier'):
@@ -65,7 +65,9 @@ total_users = config.get('Params', 'total')
 
 
 limit = 5
-offset = 0
+offset = int(sys.argv[2])
+total_users = int(total_users) + int(offset)
+print (total_users)
 for i in range(offset, int(total_users), limit):
 	response = get_user_chunk(i, limit)
 	if response:
@@ -73,7 +75,7 @@ for i in range(offset, int(total_users), limit):
 			print (primary_id.text)
 			get_user_record(primary_id.text, idtype)
 
-		
+	print ('i: ' + str(i))
 	
 	
 	
