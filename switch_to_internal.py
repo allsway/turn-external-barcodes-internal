@@ -12,18 +12,7 @@ def get_key():
 
 # Returns the Alma API base URL
 def get_base_url():
-	return config.get('Params', 'baseurl')
-	
-
-# gets the high-level user records in batches of {limit}, so that we can retrieve every user record by ID
-def get_user_chunk(offset, limit):
-	chunk_url = get_base_url() + '/almaws/v1/users?apikey=' + get_key() + '&offset=' + str(offset) + '&limit=' + str(limit);
-	response = requests.get(chunk_url)
-	if response.status_code == 200:
-		return ET.fromstring(response.content)
-	else:
-		print ('fail: ' + chunk_url)
-	
+	return config.get('Params', 'baseurl')	
 
 # Calls the individual user API
 def get_user_record(id, idtype):
