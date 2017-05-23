@@ -13,6 +13,10 @@ def get_key():
 def get_base_url():
     return config.get('Params', 'baseurl')
 
+# Returns id type that is getting switched to internal
+def get_id_type():
+    return config.get('Params', 'idtype')
+
 
 # gets the high-level user records in batches of {limit}, so that we can retrieve every user record by ID
 def get_user_chunk(offset, limit):
@@ -58,9 +62,6 @@ def put_user(xml,id):
 # parsing configuration file for API information, number of users and the ID type that we are switching to an internal ID type.
 config = configparser.ConfigParser()
 config.read(sys.argv[1]) #reads in parameter file
-apikey = config.get('Params', 'apikey')
-baseurl = config.get('Params','baseurl')
-idtype =  config.get('Params', 'idtype')
 total_users = config.get('Params', 'total')
 
 limit = 5
@@ -73,5 +74,5 @@ for i in range(offset, int(total_users), limit):
     if response:
         for primary_id in response.findall('user/primary_id'):
             print (primary_id.text)
-            get_user_record(primary_id.text, idtype)
+            get_user_record(primary_id.text, get_id_type())
     print ('i: ' + str(i))
